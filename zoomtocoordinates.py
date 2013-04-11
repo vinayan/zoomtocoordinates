@@ -24,6 +24,7 @@ from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
+from qgis.gui import QgsRubberBand
 # Initialize Qt resources from file resources.py
 import resources_rc
 # Import the code for the dialog
@@ -67,6 +68,10 @@ class ZoomToCoordinates:
         
         #todo - set scale as a spinbox
         self.scale = 100
+        self.rubberBand = QgsRubberBand(iface.mapCanvas(),QGis.Point)
+        self.rubberBand.setColor(Qt.red)
+        #self.rubberBand.setIcon(QgsRubberBand.IconType.ICON_CIRCLE)
+        self.rubberBand.setIconSize(7)
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -106,16 +111,71 @@ class ZoomToCoordinates:
 		print "zoom button clicked!"
 		x = self.dlg.ui.mTxtX.text()
 		y = self.dlg.ui.mTxtY.text()
+		
+		if x.isEmpty():
+			return
+		
+		if y.isEmpty():
+			return
+			
 		print x + "," + y
 		
 		rect = QgsRectangle(float(x)-self.scale,float(y)-self.scale,float(x)+self.scale,float(y)+self.scale)
 		self.canvas.setExtent(rect)
-		self.canvas.refresh() 
-		
-		
+		pt = QgsPoint(float(x),float(y))
+		self.highlight(pt)
+		self.canvas.refresh()
 		
     def pan(self):
 		print "pan button clicked!"
+		x = self.dlg.ui.mTxtX.text()
+		y = self.dlg.ui.mTxtY.text()
+		
+		if x.isEmpty():
+			return
+		
+		if y.isEmpty():
+			return
+		
+		print x + "," + y
+		
+		canvas = self.canvas
+		currExt = canvas.extent()
+		
+		canvasCenter = currExt.center()
+		dx = float(x) - canvasCenter.x()
+		dy = float(y) - canvasCenter.y()
+		
+		xMin = currExt.xMinimum() + dx
+		xMax = currExt.xMaximum() + dx
+		yMin = currExt.yMinimum() + dy
+		yMax = currExt.yMaximum() + dy
+		
+		newRect = QgsRectangle(xMin,yMin,xMax,yMax)
+		canvas.setExtent(newRect)
+		canvas.refresh()
 		
     def flash(self):
 		print "flash button clicked!"
+		
+		x = self.dlg.ui.mTxtX.text()
+		y = self.dlg.ui.mTxtY.text()
+		
+		if x.isEmpty():
+			return
+		
+		if y.isEmpty():
+			return
+			
+    def highlight(self,point):
+		print "highlighting.."
+		rb = self.rubberBand
+		rb.reset(QGis.Point)
+		rb.addPoint(point)
+		QTimer.singleShot(500,self.resetRubberbands)
+    
+    def resetRubberbands(self):
+		print "resetting rubberbands.."
+		self.rubberBand.reset()
+		print "completed resetting.."
+		
