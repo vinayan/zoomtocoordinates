@@ -72,6 +72,10 @@ class ZoomToCoordinates:
         self.rubberBand.setColor(Qt.red)
         #self.rubberBand.setIcon(QgsRubberBand.IconType.ICON_CIRCLE)
         self.rubberBand.setIconSize(7)
+        
+        #add rubberbands for cross
+        self.crossRb = QgsRubberBand(iface.mapCanvas(),QGis.Line)
+        self.crossRb.setColor(Qt.black)
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -153,6 +157,8 @@ class ZoomToCoordinates:
 		
 		newRect = QgsRectangle(xMin,yMin,xMax,yMax)
 		canvas.setExtent(newRect)
+		pt = QgsPoint(float(x),float(y))
+		self.highlight(pt)
 		canvas.refresh()
 		
     def flash(self):
@@ -166,9 +172,28 @@ class ZoomToCoordinates:
 		
 		if y.isEmpty():
 			return
+		pt = QgsPoint(float(x),float(y))
+		self.highlight(pt)
 			
     def highlight(self,point):
 		print "highlighting.."
+		canvas = self.canvas
+		
+		currExt = canvas.extent()
+		
+		leftPt = QgsPoint(currExt.xMinimum(),point.y())
+		rightPt = QgsPoint(currExt.xMaximum(),point.y())
+		
+		topPt = QgsPoint(point.x(),currExt.yMaximum())
+		bottomPt = QgsPoint(point.x(),currExt.yMinimum())
+		
+		horizLine = QgsGeometry.fromPolyline( [ leftPt , rightPt ] )
+		vertLine = QgsGeometry.fromPolyline( [ topPt , bottomPt ] )
+		
+		self.crossRb.reset(QGis.Line)
+		self.crossRb.addGeometry(horizLine,None)
+		self.crossRb.addGeometry(vertLine,None)
+				
 		rb = self.rubberBand
 		rb.reset(QGis.Point)
 		rb.addPoint(point)
@@ -177,5 +202,6 @@ class ZoomToCoordinates:
     def resetRubberbands(self):
 		print "resetting rubberbands.."
 		self.rubberBand.reset()
+		self.crossRb.reset()
 		print "completed resetting.."
 		
