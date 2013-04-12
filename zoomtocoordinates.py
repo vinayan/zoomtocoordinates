@@ -59,6 +59,15 @@ class ZoomToCoordinates:
         self.dlg.setParent(self.iface.mainWindow(),QtCore.Qt.Dialog)
         #self.dlg = QtGui.QMainWindow(self.iface.mainWindow(), QtCore.Qt.Dialog)
         
+        #add Spinbox to toolbar 
+        lblScale = QLabel("Scale View By")
+        self.dlg.ui.toolBar.addSeparator() 
+        self.dlg.ui.toolBar.addWidget(lblScale)    
+        spBox = QSpinBox()
+        self.dlg.ui.toolBar.addWidget(spBox)
+
+        self.spinBox = spBox
+        
         #validations
         validator = QtGui.QDoubleValidator()
         lEditX = self.dlg.ui.mTxtX
@@ -66,8 +75,7 @@ class ZoomToCoordinates:
         lEditX.setValidator(validator)
         lEditY.setValidator(validator)
         
-        #todo - set scale as a spinbox
-        self.scale = 100
+
         self.rubberBand = QgsRubberBand(iface.mapCanvas(),QGis.Point)
         self.rubberBand.setColor(Qt.red)
         #self.rubberBand.setIcon(QgsRubberBand.IconType.ICON_CIRCLE)
@@ -123,8 +131,8 @@ class ZoomToCoordinates:
 			return
 			
 		print x + "," + y
-		
-		rect = QgsRectangle(float(x)-self.scale,float(y)-self.scale,float(x)+self.scale,float(y)+self.scale)
+		scale = self.spinBox.value()
+		rect = QgsRectangle(float(x)-scale,float(y)-scale,float(x)+scale,float(y)+scale)
 		self.canvas.setExtent(rect)
 		pt = QgsPoint(float(x),float(y))
 		self.highlight(pt)
