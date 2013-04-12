@@ -24,7 +24,7 @@ from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
-from qgis.gui import QgsRubberBand
+from qgis.gui import *
 # Initialize Qt resources from file resources.py
 import resources_rc
 # Import the code for the dialog
@@ -75,11 +75,11 @@ class ZoomToCoordinates:
         lEditX.setValidator(validator)
         lEditY.setValidator(validator)
         
-
-        self.rubberBand = QgsRubberBand(iface.mapCanvas(),QGis.Point)
-        self.rubberBand.setColor(Qt.red)
-        #self.rubberBand.setIcon(QgsRubberBand.IconType.ICON_CIRCLE)
-        self.rubberBand.setIconSize(7)
+        #create rubberband for point..for qgis 1.9 and higher
+        self.rubberBand = None
+        
+        #create vertex marker for point..older versons..
+        self.vMarker = None
         
         #add rubberbands for cross
         self.crossRb = QgsRubberBand(iface.mapCanvas(),QGis.Line)
@@ -100,6 +100,18 @@ class ZoomToCoordinates:
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action)
         self.iface.addPluginToMenu(u"&ZoomToCoordinates", self.action)
+        
+        #configure rubberbands..
+        
+        if QGis.QGIS_VERSION_INT >= 10900:
+			self.rubberBand = QgsRubberBand(self.canvas,QGis.Point)
+			self.rubberBand.setColor(Qt.red)
+			#self.rubberBand.setIcon(QgsRubberBand.IconType.ICON_CIRCLE)
+			self.rubberBand.setIconSize(7)
+        else:
+			self.vMarker = QgsVertexMarker(self.canvas)
+			self.vMarker.setIconSize(10)
+		
 
     def unload(self):
         # Remove the plugin menu item and icon
@@ -132,6 +144,7 @@ class ZoomToCoordinates:
 			
 		print x + "," + y
 		scale = self.spinBox.value()
+		print "scale is - " + str(scale)
 		rect = QgsRectangle(float(x)-scale,float(y)-scale,float(x)+scale,float(y)+scale)
 		self.canvas.setExtent(rect)
 		pt = QgsPoint(float(x),float(y))
@@ -201,15 +214,30 @@ class ZoomToCoordinates:
 		self.crossRb.reset(QGis.Line)
 		self.crossRb.addGeometry(horizLine,None)
 		self.crossRb.addGeometry(vertLine,None)
-				
-		rb = self.rubberBand
-		rb.reset(QGis.Point)
-		rb.addPoint(point)
+		
+		if QGis.QGIS_VERSION_INT >= 10900:
+			rb = self.rubberBand
+			rb.reset(QGis.Point)
+			rb.addPoint(point)
+		else:
+			self.vMarker = QgsVertexMarker(self.canvas)
+			self.vMarker.setIconSize(10)
+			self.vMarker.setCenter(point)
+			self.vMarker.show()
+			
+		# wait .5 seconds to simulate a flashing effect
 		QTimer.singleShot(500,self.resetRubberbands)
     
     def resetRubberbands(self):
 		print "resetting rubberbands.."
-		self.rubberBand.reset()
+		canvas = self.canvas
+		
+		if QGis.QGIS_VERSION_INT >= 10900:
+			self.rubberBand.reset()
+		else:
+			self.vMarker.hide()
+			canvas.scene().removeItem(self.vMarker)
+		
 		self.crossRb.reset()
 		print "completed resetting.."
 		
