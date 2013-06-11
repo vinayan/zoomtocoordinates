@@ -11,6 +11,7 @@
 [general]
 name=ZoomToCoordinates
 qgisMinimumVersion=1.8
+qgisMaximumVersion=2.9
 description=Zoom,Pan and Highlight Entered Coordinates
 version=0.1
 author=Vinayan Parameswaran

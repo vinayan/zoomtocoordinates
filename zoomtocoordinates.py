@@ -41,7 +41,7 @@ class ZoomToCoordinates:
         self.plugin_dir = QFileInfo(QgsApplication.qgisUserDbFilePath()).path() + "/python/plugins/zoomtocoordinates"
         # initialize locale
         localePath = ""
-        locale = QSettings().value("locale/userLocale").toString()[0:2]
+        locale = QSettings().value("locale/userLocale")
 
         if QFileInfo(self.plugin_dir).exists():
             localePath = self.plugin_dir + "/i18n/zoomtocoordinates_" + locale + ".qm"
@@ -136,10 +136,10 @@ class ZoomToCoordinates:
 		x = self.dlg.ui.mTxtX.text()
 		y = self.dlg.ui.mTxtY.text()
 		
-		if x.isEmpty():
+		if not x:
 			return
 		
-		if y.isEmpty():
+		if not y:
 			return
 			
 		print x + "," + y
@@ -156,10 +156,10 @@ class ZoomToCoordinates:
 		x = self.dlg.ui.mTxtX.text()
 		y = self.dlg.ui.mTxtY.text()
 		
-		if x.isEmpty():
+		if not x:
 			return
 		
-		if y.isEmpty():
+		if not y:
 			return
 		
 		print x + "," + y
@@ -188,10 +188,10 @@ class ZoomToCoordinates:
 		x = self.dlg.ui.mTxtX.text()
 		y = self.dlg.ui.mTxtY.text()
 		
-		if x.isEmpty():
+		if not x:
 			return
 		
-		if y.isEmpty():
+		if not y:
 			return
 		pt = QgsPoint(float(x),float(y))
 		self.highlight(pt)
